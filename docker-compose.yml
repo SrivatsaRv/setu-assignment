@@ -68,7 +68,6 @@ services:
     container_name: metrics
     volumes:
       - "C:/Users/IG/Desktop/setu-assignment/metrics_csv:/metrics_data"
-      - "/var/run/docker.sock:/var/run/docker.sock"
     depends_on:
       sql1:
         condition: service_healthy
