@@ -7,7 +7,7 @@ services:
     container_name: sql1
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: testdb
+      MYSQL_DATABASE: testdb  # Initial database to be created
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     volumes:
@@ -29,7 +29,7 @@ services:
     container_name: sql2
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: testdb
+      MYSQL_DATABASE: testdb  # Initial database to be created
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     volumes:
