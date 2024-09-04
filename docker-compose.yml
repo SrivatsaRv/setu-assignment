@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # SQL Container 1
+  sql1:
+    image: mysql:5.7
+    container_name: sql1
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - C:/Users/IG/Desktop/setu-assingment/docker_data/sql1:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - app_net
+
+  # SQL Container 2
+  sql2:
+    image: mysql:5.7
+    container_name: sql2
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - C:/Users/IG/Desktop/setu-assingment/docker_data/sql2:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - app_net
+
+  # NGINX as Traffic Router
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - C:/Users/IG/Desktop/setu-assingment/nginx_conf:/etc/nginx/conf.d
+    depends_on:
+      - sql1
+      - sql2
+    networks:
+      - app_net
+
+  # Metrics Collection
+  metrics:
+    build:
+      context: ./metrics  # Builds the image with dependencies from the Dockerfile
+    container_name: metrics
+    volumes:
+      - C:/Users/IG/Desktop/setu-assingment/metrics_csv:/metrics_data
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - sql1
+      - sql2
+    networks:
+      - app_net
+
+  # Traffic Switch
+  traffic_switch:
+    image: python:3.8-slim
+    container_name: traffic_switch
+    volumes:
+      - C:/Users/IG/Desktop/setu-assingment/metrics_csv:/metrics_data
+      - C:/Users/IG/Desktop/setu-assingment/traffic_switch/traffic_switch.py:/app/traffic_switch.py
+      - C:/Users/IG/Desktop/setu-assingment/nginx_conf:/etc/nginx/conf.d
+    command: python /app/traffic_switch.py
+    depends_on:
+      - metrics
+      - nginx
+    networks:
+      - app_net
+
+  # Load Generator
+  load_generator:
+    image: alpine:latest
+    container_name: load_generator
+    volumes:
+      - C:/Users/IG/Desktop/setu-assingment/load_test.sh:/load_test.sh
+    command: ["/bin/sh", "/load_test.sh"]
+    depends_on:
+      - sql1
+      - sql2
+      - nginx
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    driver: bridge
