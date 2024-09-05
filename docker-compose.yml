@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  sql1:
+    image: mysql:latest
+    container_name: sql1
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+
+  sql2:
+    image: mysql:latest
+    container_name: sql2
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3307:3306"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+
+  load_test:
+    build: ./load_test
+    container_name: load_test
+    depends_on:
+      - sql1
+    networks:
+      - default
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+
+  monitor:
+    build: ./monitor
+    container_name: monitor
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock   # Mount Docker socket for Docker SDK access
+      - /home/ec2-user/project-docker:/home/ec2-user/project-docker
+    depends_on:
+      - sql1
+      - sql2
+    networks:
+      - default
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+
